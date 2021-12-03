@@ -1,7 +1,6 @@
-.. _readme:
+openssh-formula
+===============
 
-openssh
-=======
 |img_travis| |img_sr|
 
 .. |img_travis| image:: https://travis-ci.com/saltstack-formulas/openssh-formula.svg?branch=master
@@ -31,12 +30,18 @@ which contains the currently released version. This formula is versioned accordi
 
 See `Formula Versioning Section <https://docs.saltstack.com/en/latest/topics/development/conventions/formulas.html#versioning>`_ for more details.
 
+If you need (non-default) configuration, please refer to:
+
+- `how to configure the formula with map.jinja <map.jinja.rst>`_
+- the ``pillar.example`` file
+
+
 Contributing to this repo
 -------------------------
 
 **Commit message formatting is significant!!**
 
-Please see :ref:`How to contribute <CONTRIBUTING>` for more details.
+Please see `How to contribute <https://github.com/saltstack-formulas/.github/blob/master/CONTRIBUTING.rst>`_ for more details.
 
 Available states
 ----------------
@@ -85,11 +90,11 @@ so root login will be disabled.
 ``openssh.config_ini``
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Version of managing ``sshd_config`` that uses the 
+Version of managing ``sshd_config`` that uses the
 `ini_managed.option_present <https://docs.saltstack.com/en/latest/ref/states/all/salt.states.ini_manage.html>`_
-state module, so it enables to override only one or 
-multiple values and keeping the defaults shipped by your 
-distribution. 
+state module, so it enables to override only one or
+multiple values and keeping the defaults shipped by your
+distribution.
 
 
 ``openssh.known_hosts``
@@ -117,7 +122,7 @@ setup those functions through pillar::
       public_ssh_host_keys:
         mine_function: cmd.run
         cmd: cat /etc/ssh/ssh_host_*_key.pub
-        python_shell: True
+        python_shell: true
       public_ssh_hostname:
         mine_function: grains.get
         key: id
@@ -210,12 +215,32 @@ To **include localhost** and local IP addresses (``127.0.0.1`` and ``::1``) use 
 
     openssh:
       known_hosts:
-        include_localhost: True
+        include_localhost: true
+
+To prevent ever-changing IP addresses from being added to a host, use this::
+
+    openssh:
+      known_hosts:
+        omit_ip_address:
+          - my.host.tld
+
+To completely disable adding IP addresses::
+
+    openssh:
+      known_hosts:
+        omit_ip_address: true
 
 ``openssh.moduli``
 ^^^^^^^^^^^^^^^^^^
 
 Manages the system wide ``/etc/ssh/moduli`` file.
+
+``openssh._mapdata``
+^^^^^^^^^^^^^^^^^^^^
+
+Testing state which dumps the ``map.jinja`` values in ``/tmp/salt_mapdata_dump.yaml``.
+This state is not called by any include but is mostly used by kitchen and Inspec infrastructure to validate ``map.jinja``.
+
 
 Testing
 -------
@@ -240,7 +265,7 @@ e.g. ``debian-9-2019-2-py3``.
 ``bin/kitchen converge``
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Creates the docker instance and runs the ``template`` main state, ready for testing.
+Creates the docker instance and runs the ``openssh`` main states, ready for testing.
 
 ``bin/kitchen verify``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -262,3 +287,64 @@ Runs all of the stages above in one go: i.e. ``destroy`` + ``converge`` + ``veri
 
 Gives you SSH access to the instance for manual testing.
 
+Testing with Vagrant
+--------------------
+
+Windows/FreeBSD/OpenBSD testing is done with ``kitchen-salt``.
+
+Requirements
+^^^^^^^^^^^^
+
+* Ruby
+* Virtualbox
+* Vagrant
+
+Setup
+^^^^^
+
+.. code-block:: bash
+
+   $ gem install bundler
+   $ bundle install --with=vagrant
+   $ bin/kitchen test [platform]
+
+Where ``[platform]`` is the platform name defined in ``kitchen.vagrant.yml``,
+e.g. ``windows-81-latest-py3``.
+
+Note
+^^^^
+
+When testing using Vagrant you must set the environment variable ``KITCHEN_LOCAL_YAML`` to ``kitchen.vagrant.yml``.  For example:
+
+.. code-block:: bash
+
+   $ KITCHEN_LOCAL_YAML=kitchen.vagrant.yml bin/kitchen test      # Alternatively,
+   $ export KITCHEN_LOCAL_YAML=kitchen.vagrant.yml
+   $ bin/kitchen test
+
+Then run the following commands as needed.
+
+``bin/kitchen converge``
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Creates the Vagrant instance and runs the ``openssh`` main states, ready for testing.
+
+``bin/kitchen verify``
+^^^^^^^^^^^^^^^^^^^^^^
+
+Runs the ``inspec`` tests on the actual instance.
+
+``bin/kitchen destroy``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Removes the Vagrant instance.
+
+``bin/kitchen test``
+^^^^^^^^^^^^^^^^^^^^
+
+Runs all of the stages above in one go: i.e. ``destroy`` + ``converge`` + ``verify`` + ``destroy``.
+
+``bin/kitchen login``
+^^^^^^^^^^^^^^^^^^^^^
+
+Gives you RDP/SSH access to the instance for manual testing.

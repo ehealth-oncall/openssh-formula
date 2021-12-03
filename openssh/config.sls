@@ -1,6 +1,9 @@
 {%- set tplroot = tpldir.split('/')[0] %}
-{%- from tplroot ~ "/map.jinja" import openssh, ssh_config, sshd_config with context %}
+{%- from tplroot ~ "/map.jinja" import mapdata with context %}
 {%- from tplroot ~ "/libtofs.jinja" import files_switch %}
+{%- set openssh = mapdata.openssh %}
+{%- set sshd_config = mapdata.sshd_config %}
+{%- set ssh_config = mapdata.ssh_config %}
 
 
 include:
@@ -16,6 +19,8 @@ sshd_config:
                                     'sshd_config'
               ) }}
     - template: jinja
+    - context:
+        sshd_config: {{ sshd_config | json }}
     - user: {{ openssh.sshd_config_user }}
     - group: {{ openssh.sshd_config_group }}
     - mode: {{ openssh.sshd_config_mode }}
@@ -37,6 +42,8 @@ ssh_config:
                                     'ssh_config'
               ) }}
     - template: jinja
+    - context:
+        ssh_config: {{ ssh_config | json }}
     - user: {{ openssh.ssh_config_user }}
     - group: {{ openssh.ssh_config_group }}
     - mode: {{ openssh.ssh_config_mode }}
@@ -100,7 +107,7 @@ ssh_host_{{ keyType }}_key:  # set permissions
   file.managed:
     - name: {{ keyFile }}
     - replace: false
-    - mode: 0600
+    - mode: '0600'
     - require:
       - cmd: ssh_generate_host_{{ keyType }}_key
     {%- if sshd_config %}

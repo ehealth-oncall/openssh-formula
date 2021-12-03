@@ -335,6 +335,13 @@ openssh:
     static:
       github.com: 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGm[...]'
       gitlab.com: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCsj2bN[...]'
+    # Prevent an ever-changing ssh_known_hosts file caused by a domain which
+    # is served from multiple IP addresses.
+    # To disable completely:
+    # omit_ip_address: true
+    # Or to disable by specific hosts:
+    omit_ip_address:
+      - github.com
 
   # yamllint disable rule:line-length
   # specify DH parameters (see /etc/ssh/moduli)
@@ -353,16 +360,6 @@ openssh:
   #     http://some.server.somewhere/salt/moduli.hash
   #     salt://files/ssh/moduli.hash
   # These will be automatically referenced to by the ssh_moduli state.
-
-# Required for openssh.known_hosts
-mine_functions:
-  public_ssh_host_keys:
-    mine_function: cmd.run
-    cmd: cat /etc/ssh/ssh_host_*_key.pub
-    python_shell: true
-  public_ssh_hostname:
-    mine_function: grains.get
-    key: id
 
   tofs:
     # The files_switch key serves as a selector for alternative
@@ -392,3 +389,13 @@ mine_functions:
         - alt_ssh_config
       sshd_banner:
         - fire_banner
+
+# Required for openssh.known_hosts
+mine_functions:
+  public_ssh_host_keys:
+    mine_function: cmd.run
+    cmd: cat /etc/ssh/ssh_host_*_key.pub
+    python_shell: true
+  public_ssh_hostname:
+    mine_function: grains.get
+    key: id

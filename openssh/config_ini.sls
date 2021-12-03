@@ -1,4 +1,6 @@
-{%- from "openssh/map.jinja" import openssh, sshd_config with context %}
+{%- from "openssh/map.jinja" import mapdata with context %}
+{%- set openssh = mapdata.openssh %}
+{%- set sshd_config = mapdata.sshd_config %}
 
 include:
   - openssh
@@ -15,7 +17,7 @@ sshd_config-with-ini:
     - repl: '\1 \2'
     - show_changes: True
     - require_in:
-      - ini_manage: sshd_config-with-ini
+      - ini: sshd_config-with-ini
   {%- endif %}
 
   ini.options_present:

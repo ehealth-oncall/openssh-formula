@@ -22,7 +22,14 @@ sshd_config:
   PrintMotd: 'no'
   AcceptEnv: "LANG LC_*"
   Subsystem: "sftp /usr/lib/openssh/sftp-server"
+  {%- if grains.os != "OpenBSD" %}
   UsePAM: 'yes'
+  {%- endif %}
+  {#- Need this on Arch Linux to avoid the `kitchen verify` failure as mentioned above; see: #}
+  {#- * https://gitlab.com/saltstack-formulas/infrastructure/salt-image-builder/-/commit/cb6781a2bba9 #}
+  {%- if grains.os == "Arch" %}
+  PubkeyAcceptedAlgorithms: "+ssh-rsa"
+  {%- endif %}
 
 ssh_config:
   Hosts:
@@ -168,6 +175,8 @@ openssh:
     static:
       github.com: 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGm[...]'
       gitlab.com: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCsj2bN[...]'
+    omit_ip_address:
+      - github.com
 
   # specify DH parameters (see /etc/ssh/moduli)
   # yamllint disable rule:line-length
@@ -186,16 +195,6 @@ openssh:
   #     http://some.server.somewhere/salt/moduli.hash
   #     salt://files/ssh/moduli.hash
   # These will be automatically referenced to by the ssh_moduli state.
-
-# Required for openssh.known_hosts
-mine_functions:
-  public_ssh_host_keys:
-    mine_function: cmd.run
-    cmd: cat /etc/ssh/ssh_host_*_key.pub
-    python_shell: true
-  public_ssh_hostname:
-    mine_function: grains.get
-    key: id
 
   tofs:
     # The files_switch key serves as a selector for alternative
@@ -225,3 +224,13 @@ mine_functions:
         - alt_ssh_config
       sshd_banner:
         - fire_banner
+
+# Required for openssh.known_hosts
+mine_functions:
+  public_ssh_host_keys:
+    mine_function: cmd.run
+    cmd: cat /etc/ssh/ssh_host_*_key.pub
+    python_shell: true
+  public_ssh_hostname:
+    mine_function: grains.get
+    key: id
