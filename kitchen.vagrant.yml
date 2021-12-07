@@ -3,44 +3,44 @@
 ---
 driver:
   name: vagrant
+  cache_directory: false
+  customize:
+    usbxhci: 'off'
+  gui: false
+  ssh:
+    shell: /bin/sh
+  <% unless ENV['CI'] %>
+  linked_clone: true
+  synced_folders:
+    - - '.kitchen/kitchen-vagrant/%{instance_name}/vagrant'
+      - '/vagrant'
+      - 'create: true, disabled: false'
+  <% end %>
 
 platforms:
-  - name: centos-6.8
-  - name: centos-7.2
-  - name: ubuntu-14.04
-  - name: ubuntu-16.04
-  - name: debian-8.5
-  - name: freebsd-10.3
+  - name: freebsd-130-master-py3
     driver:
-      cache_directory: false
-  - name: freebsd-11.0
+      box: myii/freebsd-13.0-master-py3
+      synced_folders: []  # https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=255208
+  - name: freebsd-122-master-py3
     driver:
-      cache_directory: false
-
-provisioner:
-  name: salt_solo
-  salt_install: bootstrap
-  salt_bootstrap_url: https://bootstrap.saltstack.com
-  salt_version: latest
-  formula: openssh
-  pillars:
-    top.sls:
-      base:
-        '*':
-          - openssh
-    openssh.sls:
-      sshd_config:
-        Port: 22
-      ssh_config:
-        Port: 22
-      openssh:
-        sshd_config_mode: '600'
-
-suites:
-  - name: default
-    provisioner:
-      salt_bootstrap_options: -X -d
-      state_top:
-        base:
-          '*':
-            - openssh.config
+      box: myii/freebsd-12.2-master-py3
+  - name: freebsd-130-3003-1-py3
+    driver:
+      box: myii/freebsd-13.0-3003.1-py3
+      synced_folders: []  # https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=255208
+  - name: freebsd-122-3003-1-py3
+    driver:
+      box: myii/freebsd-12.2-3003.1-py3
+  - name: openbsd-69-3002-6-py3
+    driver:
+      box: myii/openbsd-6.9-3002.6-py3
+      ssh:
+        shell: /bin/ksh
+      synced_folders: []
+  - name: openbsd-68-3001-1-py3
+    driver:
+      box: myii/openbsd-6.8-3001.1-py3
+      ssh:
+        shell: /bin/ksh
+      synced_folders: []
